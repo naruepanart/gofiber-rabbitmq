@@ -27,3 +27,7 @@ networks:
   star-network:
     external: true
 ```
+
+## UI
+
+http://localhost:15672

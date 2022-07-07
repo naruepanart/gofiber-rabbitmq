@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/streadway/amqp"
 )
 
@@ -17,11 +16,6 @@ func main() {
 
 	// Create a new Fiber instance.
 	app := fiber.New()
-
-	// Add middleware.
-	app.Use(
-		logger.New(), // add simple logger
-	)
 
 	// Add route.
 	app.Get("/send", func(c *fiber.Ctx) error {
