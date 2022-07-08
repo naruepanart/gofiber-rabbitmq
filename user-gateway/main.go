@@ -26,45 +26,47 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 func main() {
+	// RabbitMQ connection
+	// connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@rabbitmq-management-alpine:5672/")
+	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@localhost:5672/")
+	if err != nil {
+		panic(err)
+	}
+
 	// Create a new Fiber instance.
 	app := fiber.New()
-
-	// Create a new RabbitMQ connection.
-	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@rabbitmq-management-alpine:5672/")
-	if err != nil {
-		log.Println(err)
-	}
-	defer connRabbitMQ.Close()
-
-	ch, err := connRabbitMQ.Channel()
-	if err != nil {
-		log.Println(err)
-	}
-	defer ch.Close()
-
-	q, err := ch.QueueDeclare(
-		"publisher", // name
-		true,        // durable
-		false,       // delete when unused
-		false,       // exclusive
-		false,       // no-wait
-		nil,         // arguments
-	)
-	if err != nil {
-		log.Println(err)
-	}
 
 	app.Get("/send", func(c *fiber.Ctx) error {
 		u := User{}
 		u.Name = shortuuid.New()
 		out, _ := json.Marshal(u)
 
+		// Open a new channel.
+		ch, err := connRabbitMQ.Channel()
+		if err != nil {
+			log.Println(err)
+		}
+		defer ch.Close()
+
+		// With the instance and declare Queues that we can publish and subscribe to.
+		_, err = ch.QueueDeclare(
+			"publisher",
+			true,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			log.Println(err)
+		}
+
 		// Attempt to publish a message to the queue.
 		err = ch.Publish(
-			"",     // exchange
-			q.Name, // routing key
-			false,  // mandatory
-			false,  // immediate
+			"",          // exchange
+			"publisher", // routing key
+			false,       // mandatory
+			false,       // immediate
 			amqp.Publishing{
 				ContentType: "text/plain",
 				Body:        out,

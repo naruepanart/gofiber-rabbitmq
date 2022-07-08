@@ -27,19 +27,21 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 func main() {
-	dial := "host=postgresql user=postgresql password=U9Ni8JJp3LnJYBCR dbname=user port=5432 TimeZone=Asia/Bangkok"
+	// Database connection
+	// dial := "host=postgresql user=postgresql password=U9Ni8JJp3LnJYBCR dbname=user port=5432 TimeZone=Asia/Bangkok"
+	dial := "host=localhost user=postgresql password=U9Ni8JJp3LnJYBCR dbname=user port=5432 TimeZone=Asia/Bangkok"
 	ConDB, err := gorm.Open(postgres.Open(dial), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
 	ConDB.AutoMigrate(&User{})
 
-	// Create a new RabbitMQ connection with default settings.
-	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@rabbitmq-management-alpine:5672/")
+	// RabbitMQ connection
+	// connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@rabbitmq-management-alpine:5672/")
+	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@localhost:5672/")
 	if err != nil {
-		log.Println(err)
+		panic(err)
 	}
-	defer connRabbitMQ.Close()
 
 	// Open a new channel.
 	channel, err := connRabbitMQ.Channel()
@@ -48,27 +50,15 @@ func main() {
 	}
 	defer channel.Close()
 
-	q, err := channel.QueueDeclare(
-		"publisher", // name
-		true,        // durable
-		false,       // delete when unused
-		false,       // exclusive
-		false,       // no-wait
-		nil,         // arguments
-	)
-	if err != nil {
-		log.Println(err)
-	}
-
 	// Start delivering queued messages.
 	messages, err := channel.Consume(
-		q.Name, // queue
-		"",     // consumer
-		false,  // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		"publisher", // queue
+		"",          // consumer
+		true,        // auto-ack
+		false,       // exclusive
+		false,       // no-local
+		false,       // no-wait
+		nil,         // args
 	)
 	if err != nil {
 		log.Println(err)
@@ -86,8 +76,6 @@ func main() {
 
 			json.Unmarshal(message.Body, &user)
 			ConDB.Create(&user)
-
-			message.Ack(false)
 		}
 	}()
 
