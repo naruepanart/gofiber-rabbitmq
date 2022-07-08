@@ -47,15 +47,24 @@ func main() {
 	}
 	defer channel.Close()
 
+	q, err := channel.QueueDeclare(
+		"publisher", // name
+		true,        // durable
+		false,       // delete when unused
+		false,       // exclusive
+		false,       // no-wait
+		nil,         // arguments
+	)
+
 	// Start delivering queued messages.
 	messages, err := channel.Consume(
-		"TestQueue",
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
+		q.Name, // queue
+		"",     // consumer
+		false,  // auto-ack
+		false,  // exclusive
+		false,  // no-local
+		false,  // no-wait
+		nil,    // args
 	)
 	if err != nil {
 		log.Println(err)
@@ -68,10 +77,11 @@ func main() {
 
 	go func() {
 		for message := range messages {
-			/* // For example, just show received message in console.
-			log.Printf("Received message: %s\n", message.Body) */
+			// For example, just show received message in console.
+			/* log.Printf("Received message: %s\n", message.Body) */
 			json.Unmarshal(message.Body, &user)
 			ConDB.Create(&user)
+			message.Ack(false)
 		}
 	}()
 

@@ -46,13 +46,13 @@ func main() {
 
 	// With this channel open, we can then start to interact.
 	// With the instance and declare Queues that we can publish and subscribe to.
-	_, err = ch.QueueDeclare(
-		"TestQueue",
-		true,
-		true,
-		false,
-		false,
-		nil,
+	q, err := ch.QueueDeclare(
+		"publisher", // name
+		true,        // durable
+		false,       // delete when unused
+		false,       // exclusive
+		false,       // no-wait
+		nil,         // arguments
 	)
 	// Handle any errors if we were unable to create the queue.
 	if err != nil {
@@ -63,12 +63,13 @@ func main() {
 		u := User{}
 		u.Name = shortuuid.New()
 		out, _ := json.Marshal(u)
+		
 		// Attempt to publish a message to the queue.
 		err = ch.Publish(
-			"",
-			"TestQueue",
-			false,
-			false,
+			"",     // exchange
+			q.Name, // routing key
+			false,  // mandatory
+			false,  // immediate
 			amqp.Publishing{
 				ContentType: "text/plain",
 				Body:        out,
