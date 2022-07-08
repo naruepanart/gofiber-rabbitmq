@@ -10,7 +10,7 @@ version: '3.6'
 services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: rabbitmq
+    container_name: rabbitmq-management-alpine
     restart: on-failure
     environment:
     - RABBITMQ_DEFAULT_USER=rabbitmq

@@ -19,29 +19,30 @@ func main() {
 	app := fiber.New()
 
 	// Add route.
-	app.Get("/send", func(c *fiber.Ctx) error {
-		// Let's start by opening a channel to our RabbitMQ instance
-		// over the connection we have already established
-		ch, err := connRabbitMQ.Channel()
-		if err != nil {
-			return err
-		}
-		defer ch.Close()
+	// Let's start by opening a channel to our RabbitMQ instance
+	// over the connection we have already established
+	ch, err := connRabbitMQ.Channel()
+	if err != nil {
+		log.Println(err)
+	}
+	defer ch.Close()
 
-		// With this channel open, we can then start to interact.
-		// With the instance and declare Queues that we can publish and subscribe to.
-		_, err = ch.QueueDeclare(
-			"TestQueue",
-			true,
-			true,
-			false,
-			false,
-			nil,
-		)
-		// Handle any errors if we were unable to create the queue.
-		if err != nil {
-			return err
-		}
+	// With this channel open, we can then start to interact.
+	// With the instance and declare Queues that we can publish and subscribe to.
+	_, err = ch.QueueDeclare(
+		"TestQueue",
+		true,
+		true,
+		false,
+		false,
+		nil,
+	)
+	// Handle any errors if we were unable to create the queue.
+	if err != nil {
+		log.Println(err)
+	}
+
+	app.Get("/send", func(c *fiber.Ctx) error {
 		order := shortuuid.New()
 		// Attempt to publish a message to the queue.
 		err = ch.Publish(
@@ -57,7 +58,6 @@ func main() {
 		if err != nil {
 			return err
 		}
-
 		return nil
 	})
 
