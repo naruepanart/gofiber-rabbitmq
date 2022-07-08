@@ -1,13 +1,15 @@
 version: '3.4'
 
 services:
-  user-worker:
-    image: user-worker
-    container_name: user-worker
+  user-services:
+    image: user-services
+    container_name: user-services
     restart: on-failure
     build:
       context: .
       dockerfile: ./Dockerfile
+    ports:
+      - 3000:3000
     networks:
       - star-network
 

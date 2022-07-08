@@ -1,15 +1,13 @@
 version: '3.4'
 
 services:
-  user-gateway:
-    image: user-gateway
-    container_name: user-gateway
+  user-services-worker:
+    image: user-services-worker
+    container_name: user-services-worker
     restart: on-failure
     build:
       context: .
       dockerfile: ./Dockerfile
-    ports:
-      - 3000:3000
     networks:
       - star-network
 
