@@ -26,26 +26,22 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 func main() {
-	// Create a new RabbitMQ connection.
-	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@rabbitmq-management-alpine:5672/")
-	if err != nil {
-		panic(err)
-	}
-
 	// Create a new Fiber instance.
 	app := fiber.New()
 
-	// Add route.
-	// Let's start by opening a channel to our RabbitMQ instance
-	// over the connection we have already established
+	// Create a new RabbitMQ connection.
+	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@rabbitmq-management-alpine:5672/")
+	if err != nil {
+		log.Println(err)
+	}
+	defer connRabbitMQ.Close()
+
 	ch, err := connRabbitMQ.Channel()
 	if err != nil {
 		log.Println(err)
 	}
 	defer ch.Close()
 
-	// With this channel open, we can then start to interact.
-	// With the instance and declare Queues that we can publish and subscribe to.
 	q, err := ch.QueueDeclare(
 		"publisher", // name
 		true,        // durable
@@ -54,7 +50,6 @@ func main() {
 		false,       // no-wait
 		nil,         // arguments
 	)
-	// Handle any errors if we were unable to create the queue.
 	if err != nil {
 		log.Println(err)
 	}
@@ -63,7 +58,7 @@ func main() {
 		u := User{}
 		u.Name = shortuuid.New()
 		out, _ := json.Marshal(u)
-		
+
 		// Attempt to publish a message to the queue.
 		err = ch.Publish(
 			"",     // exchange
@@ -76,7 +71,7 @@ func main() {
 			},
 		)
 		if err != nil {
-			return err
+			log.Println(err)
 		}
 		return nil
 	})

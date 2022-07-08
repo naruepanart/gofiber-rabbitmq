@@ -33,12 +33,13 @@ func main() {
 		panic(err)
 	}
 	ConDB.AutoMigrate(&User{})
+
 	// Create a new RabbitMQ connection with default settings.
-	// Name of Docker container with RabbitMQ: dev-rabbitmq (see Makefile)
 	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@rabbitmq-management-alpine:5672/")
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
+	defer connRabbitMQ.Close()
 
 	// Open a new channel.
 	channel, err := connRabbitMQ.Channel()
@@ -55,6 +56,9 @@ func main() {
 		false,       // no-wait
 		nil,         // arguments
 	)
+	if err != nil {
+		log.Println(err)
+	}
 
 	// Start delivering queued messages.
 	messages, err := channel.Consume(
@@ -79,8 +83,10 @@ func main() {
 		for message := range messages {
 			// For example, just show received message in console.
 			/* log.Printf("Received message: %s\n", message.Body) */
+
 			json.Unmarshal(message.Body, &user)
 			ConDB.Create(&user)
+
 			message.Ack(false)
 		}
 	}()
