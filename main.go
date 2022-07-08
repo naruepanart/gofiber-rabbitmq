@@ -1,12 +1,23 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lithammer/shortuuid"
 	"github.com/streadway/amqp"
+	"gorm.io/gorm"
 )
+
+type User struct {
+	ID        string         `gorm:"primaryKey" json:"id,omitempty"`
+	Name      string         `json:"name,omitempty"`
+	CreatedAt time.Time      `json:"created_at,omitempty"`
+	UpdatedAt time.Time      `json:"updated_at,omitempty"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+}
 
 func main() {
 	// Create a new RabbitMQ connection.
@@ -43,7 +54,9 @@ func main() {
 	}
 
 	app.Get("/send", func(c *fiber.Ctx) error {
-		order := shortuuid.New()
+		u := User{}
+		u.Name = shortuuid.New()
+		out, _ := json.Marshal(u)
 		// Attempt to publish a message to the queue.
 		err = ch.Publish(
 			"",
@@ -52,7 +65,7 @@ func main() {
 			false,
 			amqp.Publishing{
 				ContentType: "text/plain",
-				Body:        []byte(order),
+				Body:        out,
 			},
 		)
 		if err != nil {
