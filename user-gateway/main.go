@@ -19,6 +19,12 @@ type User struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+	uuid := shortuuid.New()
+	u.ID = uuid
+	return
+}
+
 func main() {
 	// Create a new RabbitMQ connection.
 	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@localhost:5672/")
