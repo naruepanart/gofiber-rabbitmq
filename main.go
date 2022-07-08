@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/lithammer/shortuuid"
 	"github.com/streadway/amqp"
 )
 
@@ -19,11 +20,6 @@ func main() {
 
 	// Add route.
 	app.Get("/send", func(c *fiber.Ctx) error {
-		// Checking, if query is empty.
-		if c.Query("msg") == "" {
-			log.Println("Missing 'msg' query parameter")
-		}
-
 		// Let's start by opening a channel to our RabbitMQ instance
 		// over the connection we have already established
 		ch, err := connRabbitMQ.Channel()
@@ -37,7 +33,7 @@ func main() {
 		_, err = ch.QueueDeclare(
 			"TestQueue",
 			true,
-			false,
+			true,
 			false,
 			false,
 			nil,
@@ -46,7 +42,7 @@ func main() {
 		if err != nil {
 			return err
 		}
-
+		order := shortuuid.New()
 		// Attempt to publish a message to the queue.
 		err = ch.Publish(
 			"",
@@ -55,7 +51,7 @@ func main() {
 			false,
 			amqp.Publishing{
 				ContentType: "text/plain",
-				Body:        []byte(c.Query("msg")),
+				Body:        []byte(order),
 			},
 		)
 		if err != nil {

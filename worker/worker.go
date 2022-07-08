@@ -35,11 +35,6 @@ func main() {
 		log.Println(err)
 	}
 
-	// Welcome message.
-	log.Println("Successfully connected to RabbitMQ instance")
-	log.Println("[*] - Waiting for messages")
-	log.Println("[*] - Run Fiber API server and go to http://127.0.0.1:3000/send?msg=<YOUR TEXT HERE>")
-
 	// Open a channel to receive messages.
 	forever := make(chan bool)
 
