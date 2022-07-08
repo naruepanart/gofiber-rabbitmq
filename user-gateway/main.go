@@ -30,7 +30,7 @@ func main() {
 	app := fiber.New()
 
 	// Create a new RabbitMQ connection.
-	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@rabbitmq-management-alpine:5672/")
+	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@localhost:5672/")
 	if err != nil {
 		log.Println(err)
 	}
@@ -42,13 +42,14 @@ func main() {
 	}
 	defer ch.Close()
 
-	q, err := ch.QueueDeclare(
-		"publisher", // name
-		true,        // durable
-		false,       // delete when unused
-		false,       // exclusive
-		false,       // no-wait
-		nil,         // arguments
+	// With this channel open, we can then start to interact.
+	_, err = ch.QueueDeclare(
+		"TestQueue",
+		true,
+		false,
+		false,
+		false,
+		nil,
 	)
 	if err != nil {
 		log.Println(err)
@@ -61,10 +62,10 @@ func main() {
 
 		// Attempt to publish a message to the queue.
 		err = ch.Publish(
-			"",     // exchange
-			q.Name, // routing key
-			false,  // mandatory
-			false,  // immediate
+			"",
+			"TestQueue",
+			false,
+			false,
 			amqp.Publishing{
 				ContentType: "text/plain",
 				Body:        out,
