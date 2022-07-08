@@ -27,7 +27,7 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 func main() {
-	dial := "host=localhost user=postgresql password=U9Ni8JJp3LnJYBCR dbname=user port=5432 TimeZone=Asia/Bangkok"
+	dial := "host=postgresql user=postgresql password=U9Ni8JJp3LnJYBCR dbname=user port=5432 TimeZone=Asia/Bangkok"
 	ConDB, err := gorm.Open(postgres.Open(dial), &gorm.Config{})
 	if err != nil {
 		panic(err)
@@ -35,7 +35,7 @@ func main() {
 	ConDB.AutoMigrate(&User{})
 	// Create a new RabbitMQ connection with default settings.
 	// Name of Docker container with RabbitMQ: dev-rabbitmq (see Makefile)
-	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@localhost:5672/")
+	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@rabbitmq-management-alpine:5672/")
 	if err != nil {
 		panic(err)
 	}

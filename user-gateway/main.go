@@ -27,7 +27,7 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 
 func main() {
 	// Create a new RabbitMQ connection.
-	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@localhost:5672/")
+	connRabbitMQ, err := amqp.Dial("amqp://rabbitmq:mypassword@rabbitmq-management-alpine:5672/")
 	if err != nil {
 		panic(err)
 	}
