@@ -1,22 +1,11 @@
-FROM golang:1.17-alpine3.15 as builder
-# Move to working directory (/build).
-WORKDIR /build
-
-# Copy and download dependency using go mod.
-COPY go.mod go.sum ./
-RUN go mod download
-
-# Copy the code into the container.
+# Start by building the application.
+FROM golang:1.17-alpine3.15 as build
+WORKDIR /go/src/app
 COPY . .
+RUN go mod download
+RUN CGO_ENABLED=0 go build -o /go/bin/app
 
-# Set necessary environmet variables needed for our image and build the API server.
-ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
-RUN go build -ldflags="-s -w" -o worker .
-
-FROM scratch
-
-# Copy binary and config files from /build to root folder of scratch container.
-COPY --from=builder ["/build/worker", "/"]
-
-# Command to run when starting the container.
-ENTRYPOINT ["/worker"]
+# Now copy it into our base image.
+FROM gcr.io/distroless/static-debian11
+COPY --from=build /go/bin/app /
+CMD ["/app"]
