@@ -1,8 +1,4 @@
 # gofiber-rabbitmq
- 
-go run main.go
-
-cd worker && go run main.go
 
 ```
 version: '3.6'
